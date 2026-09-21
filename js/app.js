@@ -1,310 +1,138 @@
-// Requisito B - Dados Iniciais (Array com pelo menos 3 eventos)
+// Array com os dados de exemplo (Requisito B)
 let eventos = [
-  {
-    id: 1,
-    titulo: "Workshop de Git e GitHub",
-    tipo: "Workshop",
-    data: "2026-09-25",
-    local: "Laboratório 2",
-    descricao: "Atividade prática sobre versionamento.",
-    status: "Agendado"
-  },
-  {
-    id: 2,
-    titulo: "Palestra sobre Inteligência Artificial",
-    tipo: "Palestra",
-    data: "2026-10-10",
-    local: "Auditório Principal",
-    descricao: "Impactos e futuro da IA no mercado de trabalho.",
-    status: "Agendado"
-  },
-  {
-    id: 3,
-    titulo: "Minicurso de Introdução ao Python",
-    tipo: "Minicurso",
-    data: "2026-08-15",
-    local: "Laboratório 5",
-    descricao: "Conceitos básicos de lógica de programação.",
-    status: "Realizado"
-  }
+  { id: 1, titulo: "Workshop de Git e GitHub", tipo: "Workshop", data: "2026-09-25", local: "Lab 2", descricao: "Treinamento de Git.", status: "Agendado" },
+  { id: 2, titulo: "Palestra de IA", tipo: "Palestra", data: "2026-10-10", local: "Auditório", descricao: "Palestra sobre IA.", status: "Agendado" },
+  { id: 3, titulo: "Minicurso de Python", tipo: "Minicurso", data: "2026-08-15", local: "Lab 5", descricao: "Aprenda Python.", status: "Realizado" }
 ];
 
-// Estados Globais de Filtro
-let filtroTexto = "";
-let filtroStatus = "Todos";
+// Quando a página carrega
+window.onload = function() {
+  atualizarDashboard();
+};
 
-// Inicialização da Aplicação
-document.addEventListener("DOMContentLoaded", () => {
-  configurarNavegacao();
-  carregarTela("dashboard");
-});
+// 1. NAVEGAÇÃO SPA (Requisito A)
+function mudarTela(nomeTela) {
+  // Esconde todas as telas
+  document.getElementById("tela-dashboard").style.display = "none";
+  document.getElementById("tela-novo").style.display = "none";
+  document.getElementById("tela-eventos").style.display = "none";
 
-// Requisito A - Navegação SPA (sem recarregar página)
-function configurarNavegacao() {
-  document.addEventListener("click", (e) => {
-    const link = e.target.closest("[data-view]");
-    if (link) {
-      e.preventDefault();
-      
-      // Atualiza classe 'active' nos menus
-      document.querySelectorAll("[data-view]").forEach(item => item.classList.remove("active"));
-      link.classList.add("active");
+  // Mostra apenas a tela que foi clicada
+  if (nomeTela === "dashboard") {
+    document.getElementById("tela-dashboard").style.display = "block";
+    atualizarDashboard();
+  } else if (nomeTela === "novo") {
+    document.getElementById("tela-novo").style.display = "block";
+  } else if (nomeTela === "eventos") {
+    document.getElementById("tela-eventos").style.display = "block";
+    desenharLista();
+  }
+}
 
-      const view = link.dataset.view;
-      carregarTela(view);
+// 2. DASHBOARD (Requisito C)
+function atualizarDashboard() {
+  let agendados = 0;
+  let realizados = 0;
+
+  for (let i = 0; i < eventos.length; i++) {
+    if (eventos[i].status === "Agendado") {
+      agendados = agendados + 1;
+    } else if (eventos[i].status === "Realizado") {
+      realizados = realizados + 1;
     }
-  });
-}
-
-// Alternância de Views
-function carregarTela(view) {
-  const container = document.getElementById("app");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  if (view === "dashboard") {
-    renderizarDashboard(container);
-  } else if (view === "novo-evento") {
-    renderizarFormulario(container);
-  } else if (view === "eventos") {
-    renderizarEventos(container);
-  }
-}
-
-// Requisito C - Tela Dashboard
-function renderizarDashboard(container) {
-  const total = eventos.length;
-  const agendados = eventos.filter(e => e.status === "Agendado").length;
-  const realizados = eventos.filter(e => e.status === "Realizado").length;
-
-  container.innerHTML = `
-    <h2 class="mb-4">Dashboard</h2>
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="card text-white bg-primary shadow-sm p-3">
-          <div class="card-body">
-            <h5 class="card-title">Total de Eventos</h5>
-            <p class="display-4 fw-bold mb-0">${total}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card text-white bg-warning shadow-sm p-3">
-          <div class="card-body">
-            <h5 class="card-title">Eventos Agendados</h5>
-            <p class="display-4 fw-bold mb-0">${agendados}</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card text-white bg-success shadow-sm p-3">
-          <div class="card-body">
-            <h5 class="card-title">Eventos Realizados</h5>
-            <p class="display-4 fw-bold mb-0">${realizados}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// Requisito D - Cadastro de Evento
-function renderizarFormulario(container) {
-  container.innerHTML = `
-    <h2 class="mb-4">Cadastrar Novo Evento</h2>
-    <div id="mensagem-alerta"></div>
-    <div class="card p-4 shadow-sm">
-      <form id="form-novo-evento">
-        <div class="mb-3">
-          <label for="titulo" class="form-label">Título *</label>
-          <input type="text" class="form-control" id="titulo" required>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <label for="tipo" class="form-label">Tipo *</label>
-            <select class="form-select" id="tipo" required>
-              <option value="">Selecione...</option>
-              <option value="Palestra">Palestra</option>
-              <option value="Workshop">Workshop</option>
-              <option value="Minicurso">Minicurso</option>
-              <option value="Visita Técnica">Visita Técnica</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label for="data" class="form-label">Data *</label>
-            <input type="date" class="form-control" id="data" required>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label for="local" class="form-label">Local *</label>
-          <input type="text" class="form-control" id="local" required>
-        </div>
-        <div class="mb-3">
-          <label for="descricao" class="form-label">Descrição *</label>
-          <textarea class="form-control" id="descricao" rows="3" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Cadastrar Evento</button>
-      </form>
-    </div>
-  `;
-
-  document.getElementById("form-novo-evento").addEventListener("submit", processarCadastro);
-}
-
-function processarCadastro(e) {
-  e.preventDefault();
-
-  const titulo = document.getElementById("titulo").value.trim();
-  const tipo = document.getElementById("tipo").value;
-  const data = document.getElementById("data").value;
-  const local = document.getElementById("local").value.trim();
-  const descricao = document.getElementById("descricao").value.trim();
-  const alerta = document.getElementById("mensagem-alerta");
-
-  if (!titulo || !tipo || !data || !local || !descricao) {
-    alerta.innerHTML = `<div class="alert alert-danger">Por favor, preencha todos os campos obrigatórios.</div>`;
-    return;
   }
 
-  const novoId = eventos.length > 0 ? Math.max(...eventos.map(ev => ev.id)) + 1 : 1;
+  document.getElementById("total-eventos").innerText = eventos.length;
+  document.getElementById("total-agendados").innerText = agendados;
+  document.getElementById("total-realizados").innerText = realizados;
+}
 
-  eventos.push({
-    id: novoId,
-    titulo,
-    tipo,
-    data,
-    local,
-    descricao,
+// 3. CADASTRAR EVENTO (Requisito D)
+function salvarEvento(event) {
+  event.preventDefault(); // Não recarrega a página
+
+  let novo = {
+    id: Date.now(),
+    titulo: document.getElementById("campo-titulo").value.trim(),
+    tipo: document.getElementById("campo-tipo").value,
+    data: document.getElementById("campo-data").value,
+    local: document.getElementById("campo-local").value.trim(),
+    descricao: document.getElementById("campo-descricao").value.trim(),
     status: "Agendado"
-  });
+  };
 
-  alerta.innerHTML = `<div class="alert alert-success">Evento cadastrado com sucesso!</div>`;
-  document.getElementById("form-novo-evento").reset();
+  eventos.push(novo);
+
+  document.getElementById("mensagem").innerHTML = '<div class="alert alert-success">Cadastrado com sucesso!</div>';
+  
+  // Limpa os campos
+  document.getElementById("campo-titulo").value = "";
+  document.getElementById("campo-local").value = "";
+  document.getElementById("campo-descricao").value = "";
 }
 
-// Requisito E, F e G - Listagem, Filtros e Ações
-function renderizarEventos(container) {
-  container.innerHTML = `
-    <h2 class="mb-4">Eventos Cadastrados</h2>
-    <div class="row g-3 mb-4">
-      <div class="col-md-8">
-        <input type="text" id="filtro-texto" class="form-control" placeholder="Pesquisar por título..." value="${filtroTexto}">
-      </div>
-      <div class="col-md-4">
-        <select id="filtro-status" class="form-select">
-          <option value="Todos" ${filtroStatus === "Todos" ? "selected" : ""}>Todos os Status</option>
-          <option value="Agendado" ${filtroStatus === "Agendado" ? "selected" : ""}>Agendados</option>
-          <option value="Realizado" ${filtroStatus === "Realizado" ? "selected" : ""}>Realizados</option>
-        </select>
-      </div>
-    </div>
-    <div id="lista-eventos" class="row g-3"></div>
-  `;
+// 4. LISTAR E FILTRAR (Requisito E e G)
+function desenharLista() {
+  let texto = document.getElementById("filtro-texto").value.toLowerCase();
+  let status = document.getElementById("filtro-status").value;
+  let area = document.getElementById("area-cards");
 
-  document.getElementById("filtro-texto").addEventListener("input", (e) => {
-    filtroTexto = e.target.value.toLowerCase();
-    atualizarLista();
-  });
+  area.innerHTML = ""; // Limpa a lista antes de desenhar
 
-  document.getElementById("filtro-status").addEventListener("change", (e) => {
-    filtroStatus = e.target.value;
-    atualizarLista();
-  });
+  for (let i = 0; i < eventos.length; i++) {
+    let e = eventos[i];
 
-  atualizarLista();
-}
+    // Verifica se atende os filtros
+    let bateuTexto = e.titulo.toLowerCase().includes(texto);
+    let bateuStatus = (status === "Todos") || (e.status === status);
 
-// Requisito E - Manipulação dinâmica do DOM
-function atualizarLista() {
-  const container = document.getElementById("lista-eventos");
-  if (!container) return;
+    if (bateuTexto && bateuStatus) {
+      let corBadge = e.status === "Agendado" ? "bg-warning text-dark" : "bg-danger";
+      
+      let botaoRealizar = "";
+      if (e.status === "Agendado") {
+        botaoRealizar = `<button onclick="marcarRealizado(${e.id})" class="btn btn-sm btn-outline-success me-2">Concluir</button>`;
+      }
 
-  container.innerHTML = "";
-
-  const filtrados = eventos.filter(e => {
-    const atendeTexto = e.titulo.toLowerCase().includes(filtroTexto);
-    const atendeStatus = filtroStatus === "Todos" || e.status === filtroStatus;
-    return atendeTexto && atendeStatus;
-  });
-
-  if (filtrados.length === 0) {
-    container.innerHTML = `<div class="col-12"><p class="text-muted">Nenhum evento encontrado.</p></div>`;
-    return;
-  }
-
-  filtrados.forEach(evento => {
-    const col = document.createElement("div");
-    col.className = "col-md-6 col-lg-4";
-
-    const card = document.createElement("div");
-    card.className = "card h-100 shadow-sm";
-
-    const body = document.createElement("div");
-    body.className = "card-body d-flex flex-column";
-
-    const statusBadge = document.createElement("span");
-    statusBadge.className = `badge ${evento.status === "Agendado" ? "bg-warning text-dark" : "bg-success"} me-2`;
-    statusBadge.textContent = evento.status;
-
-    const tipoBadge = document.createElement("span");
-    tipoBadge.className = "badge bg-secondary";
-    tipoBadge.textContent = evento.tipo;
-
-    const badgesDiv = document.createElement("div");
-    badgesDiv.className = "mb-2";
-    badgesDiv.appendChild(statusBadge);
-    badgesDiv.appendChild(tipoBadge);
-
-    const titulo = document.createElement("h5");
-    titulo.className = "card-title";
-    titulo.textContent = evento.titulo;
-
-    const data = document.createElement("p");
-    data.className = "card-text text-muted small mb-1";
-    data.textContent = `📅 Data: ${evento.data}`;
-
-    const local = document.createElement("p");
-    local.className = "card-text text-muted small mb-2";
-    local.textContent = `📍 Local: ${evento.local}`;
-
-    const desc = document.createElement("p");
-    desc.className = "card-text flex-grow-1";
-    desc.textContent = evento.descricao;
-
-    // Requisito F - Marcar como Realizado e Excluir
-    const acoes = document.createElement("div");
-    acoes.className = "mt-3 d-flex gap-2";
-
-    if (evento.status === "Agendado") {
-      const btnRealizar = document.createElement("button");
-      btnRealizar.className = "btn btn-sm btn-outline-success";
-      btnRealizar.textContent = "Marcar como Realizado";
-      btnRealizar.onclick = () => {
-        evento.status = "Realizado";
-        atualizarLista();
-      };
-      acoes.appendChild(btnRealizar);
+      area.innerHTML += `
+        <div class="col-md-4">
+          <div class="card p-3">
+            <div>
+              <span class="badge ${corBadge}">${e.status}</span>
+              <span class="badge bg-secondary">${e.tipo}</span>
+            </div>
+            <h5 class="mt-2">${e.titulo}</h5>
+            <p class="mb-1 small">Data: ${e.data}</p>
+            <p class="mb-1 small">Local: ${e.local}</p>
+            <p class="small text-muted">${e.descricao}</p>
+            <div>
+              ${botaoRealizar}
+              <button onclick="excluir(${e.id})" class="btn btn-sm btn-outline-danger">Excluir</button>
+            </div>
+          </div>
+        </div>
+      `;
     }
+  }
+}
 
-    const btnExcluir = document.createElement("button");
-    btnExcluir.className = "btn btn-sm btn-outline-danger";
-    btnExcluir.textContent = "Excluir";
-    btnExcluir.onclick = () => {
-      eventos = eventos.filter(ev => ev.id !== evento.id);
-      atualizarLista();
-    };
-    acoes.appendChild(btnExcluir);
+// 5. AÇÕES (Requisito F)
+function marcarRealizado(id) {
+  for (let i = 0; i < eventos.length; i++) {
+    if (eventos[i].id === id) {
+      eventos[i].status = "Realizado";
+    }
+  }
+  desenharLista();
+}
 
-    body.appendChild(badgesDiv);
-    body.appendChild(titulo);
-    body.appendChild(data);
-    body.appendChild(local);
-    body.appendChild(desc);
-    body.appendChild(acoes);
-
-    card.appendChild(body);
-    col.appendChild(card);
-    container.appendChild(col);
-  });
+function excluir(id) {
+  let listaNova = [];
+  for (let i = 0; i < eventos.length; i++) {
+    if (eventos[i].id !== id) {
+      listaNova.push(eventos[i]);
+    }
+  }
+  eventos = listaNova;
+  desenharLista();
 }
